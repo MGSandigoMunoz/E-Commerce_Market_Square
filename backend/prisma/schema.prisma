@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+enum DeliveryStatus {
+  PENDING
+  ASSIGNED
+  DELIVERED
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  price       Int
+  stock       Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  transactions Transaction[]
+}
+
+model Customer {
+  id        Int       @id @default(autoincrement())
+  fullName  String
+  email     String
+  phone     String
+  createdAt DateTime  @default(now())
+
+  transactions Transaction[]
+  deliveries   Delivery[]
+}
+
+model Delivery {
+  id          Int            @id @default(autoincrement())
+  customerId  Int
+  address     String
+  city        String
+  postalCode  String
+  deliveryFee Int
+  status      DeliveryStatus @default(PENDING)
+  createdAt   DateTime       @default(now())
+
+  customer    Customer       @relation(fields: [customerId], references: [id])
+  transaction Transaction?
+}
+
+model Transaction {
+  id                 Int               @id @default(autoincrement())
+  transactionNumber  String            @unique
+  productId          Int
+  customerId         Int
+  deliveryId         Int?              @unique
+  status             TransactionStatus @default(PENDING)
+  amount             Int
+  baseFee            Int
+  deliveryFee        Int
+  totalAmount        Int
+  wompiTransactionId String?
+  cardLast4          String?
+  cardBrand          String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  product   Product   @relation(fields: [productId], references: [id])
+  customer  Customer  @relation(fields: [customerId], references: [id])
+  delivery  Delivery? @relation(fields: [deliveryId], references: [id])
+}
